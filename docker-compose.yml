@@ -1,0 +1,24 @@
+---
+
+services:
+    server:
+        image: bearstech/debian:bullseye
+        volumes:
+            - ./bin/chownmed:/usr/local/bin/chownmed:ro
+            - ./run/chownme:/var/run/chownme:rw
+        environment:
+            LISTEN: /var/run/chownme/sock
+        command:
+            chownmed
+
+    client:
+        image: bearstech/debian:bullseye
+        volumes:
+            - ./bin/chownme:/usr/local/bin/chownme:ro
+            - ./run/chownme:/var/run/chownme:rw
+        environment:
+            SERVER: /var/run/chownme/sock
+        command:
+            chownme
+        depends_on:
+            - server

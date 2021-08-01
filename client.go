@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"net"
 	"os"
+	"syscall"
 	"time"
 )
 
@@ -30,9 +32,33 @@ func main() {
 	}
 	defer c.Close()
 
+	cc, ok := c.(*net.UnixConn)
+	if !ok {
+		panic("not a unix socket")
+	}
+	/*
+		f, err := cc.File()
+		if err != nil {
+			panic(err)
+		}
+
+			err = syscall.SetsockoptInt(int(f.Fd()), syscall.SOL_SOCKET, syscall.SO_PASSCRED, 1)
+			if err != nil {
+				panic(err)
+			}
+	*/
+
+	var ucred syscall.Ucred
+	ucred.Pid = int32(os.Getpid())
+	ucred.Uid = uint32(os.Getuid())
+	ucred.Gid = uint32(os.Getgid())
+
+	oob := syscall.UnixCredentials(&ucred)
+
 	go reader(c)
 	for {
-		_, err := c.Write([]byte("hi"))
+		n, oobn, err := cc.WriteMsgUnix([]byte("hi"), oob, nil)
+		fmt.Println(n, oobn)
 		if err != nil {
 			log.Fatal("write error:", err)
 			break

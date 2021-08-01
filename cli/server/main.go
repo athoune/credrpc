@@ -2,10 +2,13 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"os"
 	"syscall"
+
+	"github.com/factorysh/chownme/server"
 )
 
 func echoServer(c net.Conn) {
@@ -46,33 +49,16 @@ func main() {
 	if listen == "" {
 		listen = "/tmp/echo.sock"
 	}
-	l, err := net.Listen("unix", listen)
+	s := server.NewServer(func(i []byte, o io.Writer, u *syscall.Ucred) error {
+		fmt.Println("msg", i)
+		o.Write(i)
+		fmt.Println("user", u)
+		return nil
+	})
+
+	err := s.ListenAndServe(listen)
+
 	if err != nil {
-		log.Fatal("listen error:", err)
-	}
-
-	for {
-		fd, err := l.Accept()
-		if err != nil {
-			log.Fatal("accept error:", err)
-		}
-		c, ok := fd.(*net.UnixConn)
-		if !ok {
-			log.Fatal("Not a UNIX socket")
-		}
-		f, err := c.File()
-		if err != nil {
-			log.Fatal("socket file error:", err)
-		}
-		//s, _ := f.Stat()
-
-		err = syscall.SetsockoptInt(int(f.Fd()), syscall.SOL_SOCKET, syscall.SO_PASSCRED, 1)
-		if err != nil {
-			panic(err)
-		}
-
-		fmt.Println(f.Name())
-
-		go echoServer(fd)
+		log.Fatal(err)
 	}
 }

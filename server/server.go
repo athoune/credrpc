@@ -27,11 +27,11 @@ func (s *Server) ListenAndServe(path string) error {
 		return err
 	}
 	for {
-		fd, err := s.listener.Accept()
+		conn, err := s.listener.Accept()
 		if err != nil {
 			return err
 		}
-		f, err := fd.(*net.UnixConn).File()
+		f, err := conn.(*net.UnixConn).File()
 		if err != nil {
 			return err
 		}
@@ -39,15 +39,15 @@ func (s *Server) ListenAndServe(path string) error {
 		if err != nil {
 			return err
 		}
-		enc := gob.NewEncoder(fd)
-		dec := gob.NewDecoder(fd)
+		enc := gob.NewEncoder(conn)
+		dec := gob.NewDecoder(conn)
 		go func() {
 			for {
 				oob2 := make([]byte, len(syscall.UnixCredentials(&syscall.Ucred{})))
-				_, _, flags, _, err := fd.(*net.UnixConn).ReadMsgUnix(nil, oob2)
+				_, _, flags, _, err := conn.(*net.UnixConn).ReadMsgUnix(nil, oob2)
 				if err != nil {
 					log.Print(err)
-					fd.Close()
+					conn.Close()
 				}
 				if flags != 0 {
 					log.Fatal("Strange flags", flags)
@@ -55,17 +55,17 @@ func (s *Server) ListenAndServe(path string) error {
 				scm, err := syscall.ParseSocketControlMessage(oob2)
 				if err != nil {
 					log.Print(err)
-					fd.Close()
+					conn.Close()
 				}
 				newUcred, err := syscall.ParseUnixCredentials(&scm[0])
 				if err != nil {
 					log.Print(err)
-					fd.Close()
+					conn.Close()
 				}
 				err = s.handler(dec, enc, newUcred)
 				if err != nil {
 					log.Print(err)
-					fd.Close()
+					conn.Close()
 				}
 			}
 		}()

@@ -1,12 +1,12 @@
 package main
 
 import (
-	"encoding/gob"
 	"log"
 	"net"
 	"os"
-	"syscall"
 	"time"
+
+	"github.com/factorysh/chownme/client"
 )
 
 func main() {
@@ -19,29 +19,14 @@ func main() {
 		log.Fatal(err)
 	}
 	defer c.Close()
-	enc := gob.NewEncoder(c)
-	dec := gob.NewDecoder(c)
 
-	var ucred syscall.Ucred
-	ucred.Pid = int32(os.Getpid())
-	ucred.Uid = uint32(os.Getuid())
-	ucred.Gid = uint32(os.Getgid())
-
-	oob := syscall.UnixCredentials(&ucred)
+	cli := client.New(c.(*net.UnixConn))
 
 	for {
-		_, _, err := c.(*net.UnixConn).WriteMsgUnix(nil, oob, nil)
-		if err != nil {
-			log.Fatal("write error:", err)
-		}
-		err = enc.Encode("World")
-		if err != nil {
-			log.Fatal("write error:", err)
-		}
 		var data string
-		err = dec.Decode(&data)
+		err = cli.Do("World", &data)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal("write error:", err)
 		}
 		println("Client got:", data)
 		time.Sleep(1e9)

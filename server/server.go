@@ -44,28 +44,36 @@ func (s *Server) ListenAndServe(path string) error {
 		go func() {
 			for {
 				oob2 := make([]byte, len(syscall.UnixCredentials(&syscall.Ucred{})))
-				_, _, flags, _, err := conn.(*net.UnixConn).ReadMsgUnix(nil, oob2)
+				n, _, flags, _, err := conn.(*net.UnixConn).ReadMsgUnix(nil, oob2)
 				if err != nil {
-					log.Print(err)
+					if n == 0 { // conn seems to be closed
+						log.Print("Closed UNIX socket : ", f.Name())
+						return
+					}
+					log.Print("Can't read header : ", err)
 					conn.Close()
+					return
 				}
 				if flags != 0 {
-					log.Fatal("Strange flags", flags)
+					log.Fatal("Strange flags ", flags)
 				}
 				scm, err := syscall.ParseSocketControlMessage(oob2)
 				if err != nil {
-					log.Print(err)
+					log.Print("Can't parse socket control message : ", err)
 					conn.Close()
+					return
 				}
 				newUcred, err := syscall.ParseUnixCredentials(&scm[0])
 				if err != nil {
-					log.Print(err)
+					log.Print("Can't parse UNIX credential : ", err)
 					conn.Close()
+					return
 				}
 				err = s.handler(dec, enc, newUcred)
 				if err != nil {
-					log.Print(err)
+					log.Print("Error Handler : ", err)
 					conn.Close()
+					return
 				}
 			}
 		}()

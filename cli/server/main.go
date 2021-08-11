@@ -1,8 +1,8 @@
 package main
 
 import (
+	"encoding/gob"
 	"fmt"
-	"io"
 	"log"
 	"net"
 	"os"
@@ -49,11 +49,15 @@ func main() {
 	if listen == "" {
 		listen = "/tmp/echo.sock"
 	}
-	s := server.NewServer(func(i []byte, o io.Writer, u *syscall.Ucred) error {
-		fmt.Println("msg", i)
-		o.Write(i)
+	s := server.NewServer(func(i *gob.Decoder, o *gob.Encoder, u *syscall.Ucred) error {
+		var data string
+		err := i.Decode(&data)
+		if err != nil {
+			return err
+		}
+		fmt.Println("msg", data)
 		fmt.Println("user", u)
-		return nil
+		return o.Encode(fmt.Sprintf("Hello %s", data))
 	})
 
 	err := s.ListenAndServe(listen)

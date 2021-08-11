@@ -1,13 +1,13 @@
 package server
 
 import (
-	"io"
+	"encoding/gob"
 	"log"
 	"net"
 	"syscall"
 )
 
-type Handler func(i []byte, o io.Writer, u *syscall.Ucred) error
+type Handler func(i *gob.Decoder, o *gob.Encoder, u *syscall.Ucred) error
 
 type Server struct {
 	listener net.Listener
@@ -39,30 +39,33 @@ func (s *Server) ListenAndServe(path string) error {
 		if err != nil {
 			return err
 		}
+		enc := gob.NewEncoder(fd)
+		dec := gob.NewDecoder(fd)
 		go func() {
 			for {
-				buf := make([]byte, 512)
-				oob2 := make([]byte, 10*24)
-				nr, oobn2, flags, _, err := fd.(*net.UnixConn).ReadMsgUnix(buf, oob2)
+				oob2 := make([]byte, len(syscall.UnixCredentials(&syscall.Ucred{})))
+				_, _, flags, _, err := fd.(*net.UnixConn).ReadMsgUnix(nil, oob2)
 				if err != nil {
-					log.Fatal(err)
+					log.Print(err)
+					fd.Close()
 				}
 				if flags != 0 {
 					log.Fatal("Strange flags", flags)
 				}
-				oob2 = oob2[:oobn2]
 				scm, err := syscall.ParseSocketControlMessage(oob2)
 				if err != nil {
-					log.Fatal(err)
+					log.Print(err)
+					fd.Close()
 				}
 				newUcred, err := syscall.ParseUnixCredentials(&scm[0])
 				if err != nil {
-					log.Fatal(err)
+					log.Print(err)
+					fd.Close()
 				}
-				data := buf[0:nr]
-				err = s.handler(data, fd, newUcred)
+				err = s.handler(dec, enc, newUcred)
 				if err != nil {
-					log.Fatal(err)
+					log.Print(err)
+					fd.Close()
 				}
 			}
 		}()

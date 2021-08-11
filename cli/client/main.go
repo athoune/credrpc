@@ -1,25 +1,13 @@
 package main
 
 import (
-	"fmt"
-	"io"
+	"encoding/gob"
 	"log"
 	"net"
 	"os"
 	"syscall"
 	"time"
 )
-
-func reader(r io.Reader) {
-	buf := make([]byte, 1024)
-	for {
-		n, err := r.Read(buf[:])
-		if err != nil {
-			return
-		}
-		println("Client got:", string(buf[0:n]))
-	}
-}
 
 func main() {
 	server := os.Getenv("SERVER")
@@ -28,25 +16,11 @@ func main() {
 	}
 	c, err := net.Dial("unix", server)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	defer c.Close()
-
-	cc, ok := c.(*net.UnixConn)
-	if !ok {
-		panic("not a unix socket")
-	}
-	/*
-		f, err := cc.File()
-		if err != nil {
-			panic(err)
-		}
-
-			err = syscall.SetsockoptInt(int(f.Fd()), syscall.SOL_SOCKET, syscall.SO_PASSCRED, 1)
-			if err != nil {
-				panic(err)
-			}
-	*/
+	enc := gob.NewEncoder(c)
+	dec := gob.NewDecoder(c)
 
 	var ucred syscall.Ucred
 	ucred.Pid = int32(os.Getpid())
@@ -55,14 +29,21 @@ func main() {
 
 	oob := syscall.UnixCredentials(&ucred)
 
-	go reader(c)
 	for {
-		n, oobn, err := cc.WriteMsgUnix([]byte("hi"), oob, nil)
-		fmt.Println(n, oobn)
+		_, _, err := c.(*net.UnixConn).WriteMsgUnix(nil, oob, nil)
 		if err != nil {
 			log.Fatal("write error:", err)
-			break
 		}
+		err = enc.Encode("World")
+		if err != nil {
+			log.Fatal("write error:", err)
+		}
+		var data string
+		err = dec.Decode(&data)
+		if err != nil {
+			log.Fatal(err)
+		}
+		println("Client got:", data)
 		time.Sleep(1e9)
 	}
 }

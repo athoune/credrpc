@@ -22,9 +22,9 @@ func main() {
 
 	cli := client.New(c.(*net.UnixConn))
 
-	for {
+	for _, name := range []string{"pim", "pam", "poum"} {
 		var data string
-		err = cli.Call("World", &data)
+		err = cli.Call(name, &data)
 		if err != nil {
 			log.Fatal("write error:", err)
 		}

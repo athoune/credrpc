@@ -24,7 +24,7 @@ func main() {
 
 	for {
 		var data string
-		err = cli.Do("World", &data)
+		err = cli.Call("World", &data)
 		if err != nil {
 			log.Fatal("write error:", err)
 		}

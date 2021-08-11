@@ -7,6 +7,7 @@ import (
 	"syscall"
 )
 
+// Client talks to the server, with UNIX credential and gob encoding
 type Client struct {
 	conn *net.UnixConn
 	enc  *gob.Encoder
@@ -14,6 +15,7 @@ type Client struct {
 	oob  []byte
 }
 
+// New Client, don't forget to close the connection with a defer.
 func New(conn *net.UnixConn) *Client {
 	return &Client{
 		conn: conn,
@@ -27,7 +29,8 @@ func New(conn *net.UnixConn) *Client {
 	}
 }
 
-func (c *Client) Do(input interface{}, output interface{}) error {
+// Call the server with an input and an output pointer for the answer.
+func (c *Client) Call(input interface{}, output interface{}) error {
 	_, _, err := c.conn.WriteMsgUnix(nil, c.oob, nil)
 	if err != nil {
 		c.conn.Close()

@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"net"
 	"os"
 	"time"
 
@@ -14,13 +13,9 @@ func main() {
 	if server == "" {
 		server = "/tmp/echo.sock"
 	}
-	c, err := net.Dial("unix", server)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer c.Close()
 
-	cli := client.New(c.(*net.UnixConn))
+	cli := client.New(server)
+	var err error
 
 	for _, name := range []string{"pim", "pam", "poum"} {
 		var data string

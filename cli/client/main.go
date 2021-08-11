@@ -21,7 +21,7 @@ func main() {
 		var data string
 		err = cli.Call(name, &data)
 		if err != nil {
-			log.Fatal("write error:", err)
+			log.Print("Call error:", err)
 		}
 		println("Client got:", data)
 		time.Sleep(1e9)

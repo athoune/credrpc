@@ -43,10 +43,6 @@ func (c *Client) Call(input interface{}, output interface{}) error {
 	if err != nil {
 		return err
 	}
-	err = dec.Decode(output)
-	if err != nil {
-		return err
-	}
 	var errRpc string
 	err = dec.Decode(&errRpc)
 	if err != nil {
@@ -54,6 +50,10 @@ func (c *Client) Call(input interface{}, output interface{}) error {
 	}
 	if len(errRpc) != 0 {
 		return errors.New(errRpc)
+	}
+	err = dec.Decode(output)
+	if err != nil {
+		return err
 	}
 	return nil
 }

@@ -7,7 +7,7 @@ import (
 	"syscall"
 )
 
-type Handler func(i *gob.Decoder, o *gob.Encoder, u *syscall.Ucred) error
+type Handler func(i *gob.Decoder, u *syscall.Ucred) (interface{}, error)
 
 type Server struct {
 	listener net.Listener
@@ -39,9 +39,9 @@ func (s *Server) ListenAndServe(path string) error {
 		if err != nil {
 			return err
 		}
-		enc := gob.NewEncoder(conn)
-		dec := gob.NewDecoder(conn)
-		go func() {
+		go func(conn net.Conn) {
+			enc := gob.NewEncoder(conn)
+			dec := gob.NewDecoder(conn)
 			defer conn.Close()
 			oob2 := make([]byte, len(syscall.UnixCredentials(&syscall.Ucred{})))
 			n, _, flags, _, err := conn.(*net.UnixConn).ReadMsgUnix(nil, oob2)
@@ -66,18 +66,22 @@ func (s *Server) ListenAndServe(path string) error {
 				log.Print("Can't parse UNIX credential : ", err)
 				return
 			}
-			err = s.handler(dec, enc, newUcred)
+			resp, err := s.handler(dec, newUcred)
 			if err != nil {
 				log.Print("Error Handler : ", err)
 				enc.Encode(err.Error())
-				return
+				// don't bother to send nil, connection will be closed
 			} else {
 				err = enc.Encode("")
+				if err != nil {
+					log.Print("Error while returnging empty error : ", err)
+				}
+				err = enc.Encode(resp)
 				if err != nil {
 					log.Print("Error while returnging response : ", err)
 				}
 			}
-		}()
+		}(conn)
 	}
 	return nil
 }

@@ -16,7 +16,7 @@ func main() {
 
 	cli := client.New(server)
 
-	for _, name := range []string{"pim", "pam", "poum"} {
+	for _, name := range []string{"Pim", "Pam", "Poum"} {
 		data, err := cli.Call([]byte(name))
 		if err != nil {
 			log.Print("Call error:", err)

@@ -4,8 +4,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"net"
-	"os"
-	"syscall"
 
 	"github.com/factorysh/chownme/protocol"
 )
@@ -30,14 +28,9 @@ func (c *Client) Call(input []byte) ([]byte, error) {
 	}
 	defer cc.Close()
 	conn := cc.(*net.UnixConn)
-	oob := syscall.UnixCredentials(&syscall.Ucred{
-		Pid: int32(os.Getpid()),
-		Uid: uint32(os.Getuid()),
-		Gid: uint32(os.Getgid()),
-	})
 	size := make([]byte, 4)
 	binary.BigEndian.PutUint32(size, uint32(len(input)))
-	_, _, err = conn.WriteMsgUnix(size, oob, nil)
+	_, err = conn.Write(size)
 	if err != nil {
 		return nil, err
 	}

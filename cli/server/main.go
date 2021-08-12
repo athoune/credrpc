@@ -22,7 +22,7 @@ func main() {
 		data := string(i)
 		fmt.Println("msg", data)
 		fmt.Println("user", u)
-		if data == "pam" {
+		if data == "Pam" {
 			return nil, errors.New("I don't like Pam")
 		}
 

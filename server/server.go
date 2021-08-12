@@ -27,11 +27,7 @@ func NewServer(handler Handler) *Server {
 	}
 }
 
-func (s *Server) ListenAndServe(path string) error {
-	listener, err := net.Listen("unix", path)
-	if err != nil {
-		return err
-	}
+func (s *Server) Serve(listener net.Listener) error {
 	for {
 		conn, err := listener.Accept()
 		if err != nil {

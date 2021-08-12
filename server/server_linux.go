@@ -1,7 +1,10 @@
 package server
 
 import (
+	"fmt"
+	"github.com/coreos/go-systemd/activation"
 	"net"
+	"os"
 	"syscall"
 )
 
@@ -29,4 +32,18 @@ func SocketControlMessage2Cred(scm []syscall.SocketControlMessage) (*Cred, error
 		Uid: newUcred.Uid,
 		Gid: newUcred.Gid,
 	}, nil
+}
+
+func ActivationListener() (net.Listener, error) {
+	if os.Getenv("LISTEN_FDS") == "" { // There is no systemd activation
+		return nil, nil
+	}
+	listeners, err := activation.Listeners()
+	if err != nil {
+		return nil, err
+	}
+	if len(listeners) != 1 {
+		return nil, fmt.Errorf("One listener is handled not %s", len(listeners))
+	}
+	return listeners[0], nil
 }

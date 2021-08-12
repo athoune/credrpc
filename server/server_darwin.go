@@ -19,3 +19,7 @@ func PrepareSocket(c *net.UnixConn) error {
 func SocketControlMessage2Cred(scm []syscall.SocketControlMessage) (*Cred, error) {
 	return nil, nil
 }
+
+func ActivationListener() (net.Listener, error) {
+	return nil, nil
+}

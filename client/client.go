@@ -38,13 +38,15 @@ func (c *Client) Call(input []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	errRpc, err := protocol.Read([]byte{}, conn)
 	if err != nil {
 		return nil, err
 	}
-	if len(errRpc) != 0 {
+	if len(errRpc) > 0 {
 		return nil, errors.New(string(errRpc))
 	}
+
 	output, err := protocol.Read([]byte{}, conn)
 	if err != nil {
 		return nil, err

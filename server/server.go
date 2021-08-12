@@ -38,10 +38,12 @@ func (s *Server) ListenAndServe(path string) error {
 		if err != nil {
 			return err
 		}
+		// Please, pass credential on the socket
 		err = syscall.SetsockoptInt(int(f.Fd()), syscall.SOL_SOCKET, syscall.SO_PASSCRED, 1)
 		if err != nil {
 			return err
 		}
+
 		go func(conn net.Conn) {
 			defer conn.Close()
 			oob2 := make([]byte, len(syscall.UnixCredentials(&syscall.Ucred{})))
@@ -82,7 +84,7 @@ func (s *Server) ListenAndServe(path string) error {
 					log.Print("Can't write error : ", err)
 					return
 				}
-				// don't bother to send nil, connection will be closed
+				// don't bother to send nil response, connection will be closed
 			} else {
 				err = protocol.Write(conn, []byte{})
 				if err != nil {

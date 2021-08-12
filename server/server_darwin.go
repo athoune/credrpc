@@ -1,11 +1,12 @@
 package server
 
+// The patch is merged https://go-review.googlesource.com/c/sys/+/292330/
+// Not yet available in go 1.16
+
 import (
 	"net"
 	"syscall"
 )
-
-// FIXME
 
 func CredLen() int {
 	return 4

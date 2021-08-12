@@ -19,4 +19,4 @@ SO_PASSCRED
     teger boolean flag.
 ```
 
-`SO_PASSCRED` is Linux only.
+`SO_PASSCRED` is Linux only, Darwin should use `LOCAL_PEERCRED`.

@@ -22,12 +22,12 @@ func New(path string) *Client {
 
 // Call the server with an input and an output pointer for the answer.
 func (c *Client) Call(input []byte) ([]byte, error) {
-	cc, err := net.Dial("unix", c.path)
+	conn, err := net.Dial("unix", c.path)
 	if err != nil {
 		return nil, err
 	}
-	defer cc.Close()
-	conn := cc.(*net.UnixConn)
+	defer conn.Close()
+
 	size := make([]byte, 4)
 	binary.BigEndian.PutUint32(size, uint32(len(input)))
 	_, err = conn.Write(size)

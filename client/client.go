@@ -1,14 +1,16 @@
 package client
 
 import (
-	"encoding/gob"
+	"encoding/binary"
 	"errors"
 	"net"
 	"os"
 	"syscall"
+
+	"github.com/factorysh/chownme/protocol"
 )
 
-// Client talks to the server, with UNIX credential and gob encoding
+// Client talks to the server, with UNIX credential
 type Client struct {
 	path string
 }
@@ -21,39 +23,38 @@ func New(path string) *Client {
 }
 
 // Call the server with an input and an output pointer for the answer.
-func (c *Client) Call(input interface{}, output interface{}) error {
+func (c *Client) Call(input []byte) ([]byte, error) {
 	cc, err := net.Dial("unix", c.path)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer cc.Close()
 	conn := cc.(*net.UnixConn)
-	enc := gob.NewEncoder(conn)
-	dec := gob.NewDecoder(conn)
 	oob := syscall.UnixCredentials(&syscall.Ucred{
 		Pid: int32(os.Getpid()),
 		Uid: uint32(os.Getuid()),
 		Gid: uint32(os.Getgid()),
 	})
-	_, _, err = conn.WriteMsgUnix(nil, oob, nil)
+	size := make([]byte, 4)
+	binary.BigEndian.PutUint32(size, uint32(len(input)))
+	_, _, err = conn.WriteMsgUnix(size, oob, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	err = enc.Encode(input)
+	_, err = conn.Write(input)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	var errRpc string
-	err = dec.Decode(&errRpc)
+	errRpc, err := protocol.Read([]byte{}, conn)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if len(errRpc) != 0 {
-		return errors.New(errRpc)
+		return nil, errors.New(string(errRpc))
 	}
-	err = dec.Decode(output)
+	output, err := protocol.Read([]byte{}, conn)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return output, nil
 }

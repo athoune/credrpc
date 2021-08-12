@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/gob"
 	"errors"
 	"fmt"
 	"log"
@@ -16,22 +15,18 @@ func main() {
 	if listen == "" {
 		listen = "/tmp/echo.sock"
 	}
-	s := server.NewServer(func(i *gob.Decoder, u *syscall.Ucred) (interface{}, error) {
+	s := server.NewServer(func(i []byte, u *syscall.Ucred) ([]byte, error) {
 		if u.Uid == 0 {
 			return nil, errors.New("root is not allowed.")
 		}
-		var data string
-		err := i.Decode(&data)
-		if err != nil {
-			return nil, err
-		}
+		data := string(i)
 		fmt.Println("msg", data)
 		fmt.Println("user", u)
 		if data == "pam" {
 			return nil, errors.New("I don't like Pam")
 		}
 
-		return fmt.Sprintf("Hello %s", data), nil
+		return []byte(fmt.Sprintf("Hello %s", data)), nil
 	})
 
 	err := s.ListenAndServe(listen)

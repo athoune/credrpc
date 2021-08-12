@@ -15,15 +15,13 @@ func main() {
 	}
 
 	cli := client.New(server)
-	var err error
 
 	for _, name := range []string{"pim", "pam", "poum"} {
-		var data string
-		err = cli.Call(name, &data)
+		data, err := cli.Call([]byte(name))
 		if err != nil {
 			log.Print("Call error:", err)
 		}
-		println("Client got:", data)
+		println("Client got:", string(data))
 		time.Sleep(1e9)
 	}
 }

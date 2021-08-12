@@ -1,4 +1,4 @@
-module github.com/factorysh/chownme
+module github.com/athoune/credrpc
 
 go 1.16
 

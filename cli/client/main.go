@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/factorysh/chownme/client"
+	"github.com/athoune/credrpc/client"
 )
 
 func main() {

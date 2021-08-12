@@ -6,7 +6,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/factorysh/chownme/protocol"
+	"github.com/athoune/credrpc/protocol"
 )
 
 type Cred struct {

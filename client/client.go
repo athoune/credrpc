@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net"
 
-	"github.com/factorysh/chownme/protocol"
+	"github.com/athoune/credrpc/protocol"
 )
 
 // Client talks to the server, with UNIX credential
@@ -20,7 +20,7 @@ func New(path string) *Client {
 	}
 }
 
-// Call the server with an input and an output pointer for the answer.
+// Call the server with an input and return an output
 func (c *Client) Call(input []byte) ([]byte, error) {
 	conn, err := net.Dial("unix", c.path)
 	if err != nil {

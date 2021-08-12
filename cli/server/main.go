@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/factorysh/chownme/server"
+	"github.com/athoune/credrpc/server"
 )
 
 func main() {

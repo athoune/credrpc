@@ -12,8 +12,7 @@ import (
 type Handler func(i []byte, u *syscall.Ucred) ([]byte, error)
 
 type Server struct {
-	listener net.Listener
-	handler  Handler
+	handler Handler
 }
 
 func NewServer(handler Handler) *Server {
@@ -23,13 +22,12 @@ func NewServer(handler Handler) *Server {
 }
 
 func (s *Server) ListenAndServe(path string) error {
-	var err error
-	s.listener, err = net.Listen("unix", path)
+	listener, err := net.Listen("unix", path)
 	if err != nil {
 		return err
 	}
 	for {
-		conn, err := s.listener.Accept()
+		conn, err := listener.Accept()
 		if err != nil {
 			return err
 		}

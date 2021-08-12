@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"syscall"
 
 	"github.com/factorysh/chownme/server"
 )
@@ -15,7 +14,7 @@ func main() {
 	if listen == "" {
 		listen = "/tmp/echo.sock"
 	}
-	s := server.NewServer(func(i []byte, u *syscall.Ucred) ([]byte, error) {
+	s := server.NewServer(func(i []byte, u *server.Cred) ([]byte, error) {
 		if u.Uid == 0 {
 			return nil, errors.New("root is not allowed.")
 		}

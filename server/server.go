@@ -9,7 +9,13 @@ import (
 	"github.com/factorysh/chownme/protocol"
 )
 
-type Handler func(i []byte, u *syscall.Ucred) ([]byte, error)
+type Cred struct {
+	Pid int32
+	Uid uint32
+	Gid uint32
+}
+
+type Handler func(i []byte, c *Cred) ([]byte, error)
 
 type Server struct {
 	handler Handler
@@ -32,24 +38,20 @@ func (s *Server) ListenAndServe(path string) error {
 			return err
 		}
 		conn.SetDeadline(time.Now().Add(time.Second))
-		f, err := conn.(*net.UnixConn).File()
-		if err != nil {
-			return err
-		}
-		// Please, pass credential on the socket
-		err = syscall.SetsockoptInt(int(f.Fd()), syscall.SOL_SOCKET, syscall.SO_PASSCRED, 1)
+
+		err = PrepareSocket(conn.(*net.UnixConn))
 		if err != nil {
 			return err
 		}
 
 		go func(conn net.Conn) {
 			defer conn.Close()
-			oob2 := make([]byte, len(syscall.UnixCredentials(&syscall.Ucred{})))
+			oob2 := make([]byte, CredLen())
 			buff := make([]byte, 2*1024) // 2k should be enough
 			n, _, flags, _, err := conn.(*net.UnixConn).ReadMsgUnix(buff, oob2)
 			if err != nil {
 				if n == 0 { // conn seems to be closed
-					log.Print("Closed UNIX socket : ", f.Name())
+					log.Print("Closed UNIX socket : ", conn)
 				} else {
 					log.Print("Can't read header : ", err)
 				}
@@ -63,7 +65,7 @@ func (s *Server) ListenAndServe(path string) error {
 				log.Print("Can't parse socket control message : ", err)
 				return
 			}
-			newUcred, err := syscall.ParseUnixCredentials(&scm[0])
+			newUcred, err := SocketControlMessage2Cred(scm)
 			if err != nil {
 				log.Print("Can't parse UNIX credential : ", err)
 				return

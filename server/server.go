@@ -34,12 +34,21 @@ func NewServer(handler Handler) *Server {
 }
 
 func (s *Server) Serve(listener net.Listener) error {
-	err := PrepareSocket(listener.(*net.UnixListener))
+	defer listener.Close()
+	u := listener.(*net.UnixListener)
+	err := PrepareSocket(u)
 	if err != nil {
 		return err
 	}
 	listener.(*net.UnixListener).SetUnlinkOnClose(true)
-	defer listener.Close()
+	f, err := u.File()
+	if err != nil {
+		return err
+	}
+	err = f.Chmod(0770)
+	if err != nil {
+		return err
+	}
 	for {
 		conn, err := listener.Accept()
 		if err != nil {

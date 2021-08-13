@@ -12,7 +12,7 @@ func CredLen() int {
 	return 4
 }
 
-func PrepareSocket(c *net.UnixConn) error {
+func PrepareSocket(c *net.UnixListener) error {
 	return nil
 }
 

@@ -12,8 +12,8 @@ func CredLen() int {
 	return len(syscall.UnixCredentials(&syscall.Ucred{}))
 }
 
-func PrepareSocket(c *net.UnixConn) error {
-	f, err := c.File()
+func PrepareSocket(l *net.UnixListener) error {
+	f, err := l.File()
 	if err != nil {
 		return err
 	}

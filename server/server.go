@@ -34,17 +34,18 @@ func NewServer(handler Handler) *Server {
 }
 
 func (s *Server) Serve(listener net.Listener) error {
+	err := PrepareSocket(listener.(*net.UnixListener))
+	if err != nil {
+		return err
+	}
+	listener.(*net.UnixListener).SetUnlinkOnClose(true)
+	defer listener.Close()
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
 			return err
 		}
 		conn.SetDeadline(time.Now().Add(time.Second))
-
-		err = PrepareSocket(conn.(*net.UnixConn))
-		if err != nil {
-			return err
-		}
 
 		go func(conn net.Conn) {
 			err := s.handle(conn)

@@ -22,20 +22,17 @@ SO_PASSCRED
 
 `SO_PASSCRED` is Linux only, Darwin should use `LOCAL_PEERCRED`, the patch is merged, but not in current Golang version.
 
-Implementation
---------------
+## Implementation
 
 The code is über simple, not optimised, with few abstraction, it should be completly read before usage.
 If any error happened, connection is closed. Nothing is reused.
 The server is designed to not trust the client, but the kernel.
 
-Protocol
---------
+### Protocol
 
 Message are Pascal String, 4 bytes for the lentgh, an `uint32`, and n bytes for the message.
 
-RPC
----
+### RPC
 
 The protocol use one shot UNIX socket, one socket per call, without streaming.
 
@@ -49,3 +46,39 @@ The serialisation is not part of this project, bring your own `encoding.BinaryMa
 The handler get the call argument (a plain old `[]byte`), and unix credential (process ID, User ID, Group ID).
 
 The handler returns a response (an other plain old `[]byte`) and an error.
+
+## Security
+
+### Socket permission
+
+```
+In the Linux implementation, sockets which are visible in the file system honor the permissions of the directory they are in.
+```
+
+### Systemd
+
+```
+NoNewPrivileges=true
+ProtectSystem=full
+
+ReadOnlyPaths=/
+ReadWritePaths=/home/ /var/run/myservice
+NoExecPaths=/
+
+PrivateTmp=true
+ProtectHostname=true
+ProtectClock=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+
+RestrictAddressFamilies=AF_UNIX
+
+SystemCallFilter=@chown read
+```
+
+### Apparmor
+
+Your privilegied service should only done ONE special thing, with a specific scope.
+Enforce this constraints with an Apparmor profile.

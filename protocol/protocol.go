@@ -6,15 +6,20 @@ import (
 	"io"
 )
 
-func Write(w io.Writer, data []byte) error {
+func Write(w io.Writer, datas ...[]byte) error {
 	buff := make([]byte, 4)
-	binary.BigEndian.PutUint32(buff, uint32(len(data)))
-	_, err := w.Write(buff)
-	if err != nil {
-		return err
+	for _, data := range datas {
+		binary.BigEndian.PutUint32(buff, uint32(len(data)))
+		_, err := w.Write(buff)
+		if err != nil {
+			return err
+		}
+		_, err = w.Write(data)
+		if err != nil {
+			return err
+		}
 	}
-	_, err = w.Write(data)
-	return err
+	return nil
 }
 
 func Read(stack []byte, r io.Reader) ([]byte, error) {

@@ -45,12 +45,17 @@ func (s *Server) Serve(listener net.Listener) error {
 		if err != nil {
 			return err
 		}
-		conn.SetDeadline(time.Now().Add(time.Second))
 
 		go func(conn net.Conn) {
-			err := s.handle(conn)
+			defer conn.Close()
+			err := conn.SetDeadline(time.Now().Add(3 * time.Minute))
 			if err != nil {
-				log.Print(err)
+				s.logger(err)
+				return
+			}
+			err = s.handle(conn)
+			if err != nil {
+				s.logger(err)
 			}
 		}(conn)
 	}

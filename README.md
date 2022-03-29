@@ -1,6 +1,8 @@
 Credrpc
 =======
 
+[![Build Status](https://drone.garambrogne.net/api/badges/athoune/credrpc/status.svg)](https://drone.garambrogne.net/athoune/credrpc)
+
 Using UNIX socket and `SO_PASSCRED` for privilegied actions.
 
 Somewhere in `man unix` you can find the documentation :

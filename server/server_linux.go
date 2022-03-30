@@ -43,7 +43,7 @@ func ActivationListener() (net.Listener, error) {
 		return nil, err
 	}
 	if len(listeners) != 1 {
-		return nil, fmt.Errorf("One listener is handled not %s", len(listeners))
+		return nil, fmt.Errorf("One listener is handled not %d", len(listeners))
 	}
 	return listeners[0], nil
 }

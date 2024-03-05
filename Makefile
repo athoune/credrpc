@@ -17,3 +17,7 @@ run/chownme:
 up: run/chownme
 	rm -rf run/chownme/sock
 	docker-compose up --exit-code-from client
+
+test:
+	go test -cover \
+		github.com/athoune/credrpc/protocol

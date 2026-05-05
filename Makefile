@@ -1,4 +1,4 @@
-.PHONY: client server
+.PHONY: client server darwin
 
 build: client server
 
@@ -10,6 +10,13 @@ client: bin
 
 bin:
 	mkdir -p bin
+
+darwin/bin:
+	mkdir -p darwin/bin
+
+darwin: darwin/bin
+	go build -o darwin/bin/chownmed ./cli/server/main.go
+	go build -o darwin/bin/chownme ./cli/client/main.go
 
 run/chownme:
 	mkdir -p run/chownme

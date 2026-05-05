@@ -1,6 +1,6 @@
 module github.com/athoune/credrpc
 
-go 1.25.0
+go 1.25.9
 
 require (
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
